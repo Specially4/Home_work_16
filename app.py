@@ -2,6 +2,7 @@ from flask import Flask
 from flask import jsonify
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
+import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -27,8 +28,8 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     description = db.Column(db.String(255))
-    start_date = db.Column(db.String(100))
-    end_date = db.Column(db.String(100))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
     address = db.Column(db.String(50))
     price = db.Column(db.Integer)
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -42,6 +43,8 @@ class Offer(db.Model):
     executor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
+# db.drop_all()
+# db.create_all()
 @app.route('/users', methods=['GET', 'POST'])
 def get_users():
     if request.method == 'POST':
@@ -107,11 +110,13 @@ def get_orders():
     if request.method == 'POST':
         data_orders = request.get_json()
         for item in data_orders:
+            month_start, day_start, year_start = [int(x) for x in item['start_date'].split('/')]
+            month_end, day_end, year_end = [int(x) for x in item['end_date'].split('/')]
             order = Order(id=item['id'],
                           name=item['name'],
                           description=item['description'],
-                          start_date=item['start_date'],
-                          end_date=item['end_date'],
+                          start_date=datetime.date(year=year_start, month=month_start, day=day_start),
+                          end_date=datetime.date(year=year_end, month=month_end, day=day_end),
                           address=item['address'],
                           price=item['price'],
                           customer_id=item['customer_id'],
@@ -140,11 +145,13 @@ def get_order(pk):
     if request.method == 'PUT':
         data_order = request.get_json()
         for item in data_order:
+            month_start, day_start, year_start = [int(x) for x in item['start_date'].split('/')]
+            month_end, day_end, year_end = [int(x) for x in item['end_date'].split('/')]
             one_order.id = item['id']
             one_order.name = item['name']
             one_order.description = item['description']
-            one_order.start_date = item['start_date']
-            one_order.end_date = item['end_date']
+            one_order.start_date = datetime.date(year=year_start, month=month_start, day=day_start)
+            one_order.end_date = datetime.date(year=year_end, month=month_end, day=day_end)
             one_order.address = item['address']
             one_order.price = item['price']
             one_order.customer_id = item['customer_id']
